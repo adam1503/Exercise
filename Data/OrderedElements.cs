@@ -8,22 +8,25 @@ namespace Data
 {
     public class OrderedEnumerable<TSource> : IOrderedEnumerable<TSource>
     {
-        private IEnumerable<TSource> source;
-        private Func<TSource, TSource, int> compare;
-        public OrderedEnumerable(IEnumerable<TSource> source, Func<TSource, TSource, int> compare)
+        private IEnumerable<TSource> Source;
+        private Comparator<TSource> Comparer;
+
+        public OrderedEnumerable(IEnumerable<TSource> source, Func<TSource, TSource, int> comparer)
         {
-            this.source = source;
-            this.compare = compare;
+            this.Source = source;
+            this.Comparer = new Comparator<TSource>(comparer);
         }
-        public IOrderedEnumerable<TSource> CreateOrderedEnumerable<TKey>(Func<TSource, TKey> keySelector, IComparer<TKey> comparer, bool descending)
+
+        public IOrderedEnumerable<TSource> CreateOrderedEnumerable<TKey>(Func<TSource, TKey> keySelector, IComparer<TKey>? comparer, bool descending)
         {
-            throw new NotImplementedException();
+            Comparer.AddComparer((x, y) => comparer.Compare(keySelector(x), keySelector(y)));
+            return this;
         }
 
         public IEnumerator<TSource> GetEnumerator()
         {
-            TSource[] sourceArray = source.ToArray();
-            InsertionSort(sourceArray);
+            TSource[] sourceArray = Source.ToArray();
+            QuickSort(sourceArray, 0, sourceArray.Length - 1);
             foreach (var item in sourceArray)
             {
                 yield return item;
@@ -35,14 +38,30 @@ namespace Data
             return GetEnumerator();
         }
 
-        private void InsertionSort(TSource[] sourceArray)
+        private void QuickSort(TSource[] elements, int left, int right)
         {
-            for (int i = 1; i < sourceArray.Length; i++)
+            if (left < right)
             {
-                for (int j = i; j > 0 && compare(sourceArray[j - 1], sourceArray[j]) > 0; j--)
+                int pivot = Partition(elements, left, right);
+                QuickSort(elements, left, pivot - 1);
+                QuickSort(elements, pivot + 1, right);
+            }
+        }
+
+        private int Partition(TSource[] elements, int left, int right)
+        {
+            var pivot = elements[left];
+            while (true)
+            {
+                while (Comparer.Compare(elements[left], pivot) < 0) { left++; }
+                while (Comparer.Compare(elements[right], pivot) > 0) { right--; }
+                if (left < right)
                 {
-                    Swap(sourceArray, j - 1, j);
+                    if (Comparer.Compare(elements[left], elements[right]) == 0) { return right; }
+                    Swap(elements, left, right);
                 }
+
+                else { return right; }
             }
         }
 
@@ -54,3 +73,4 @@ namespace Data
         }
     }
 }
+
