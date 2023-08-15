@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Data
 {
-    public class NewComparer<TSource, TKey>
+    public class NewComparer<TSource, TKey> : IComparer<TSource>
     {
         private Func<TSource, TKey> keySelector;
         private IComparer<TKey> comparer;

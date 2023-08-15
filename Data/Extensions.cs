@@ -13,7 +13,7 @@ namespace Data
                    Func<TSource, TKey> keySelector,
                    IComparer<TKey> comparer)
         {
-            return new OrderedEnumerable<TSource>(source, new Comparer<TSource, TKey>(keySelector, comparer));
+            return new OrderedEnumerable<TSource>(source, (x, y) => comparer.Compare(keySelector(x), keySelector(y)));
         }
 
         public static IOrderedEnumerable<TSource> OrderBy<TSource, TKey>(
